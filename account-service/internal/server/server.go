@@ -78,6 +78,7 @@ func (s *server) Run() error {
 
 	esignClient.GetDetail(context.Background())
 
+	s.Migrate()
 	s.runHealthCheck(ctx)
 	//s.runMetrics(cancel)
 

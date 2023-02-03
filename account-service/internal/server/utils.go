@@ -1,9 +1,12 @@
 package server
 
 import (
+	"acbs.com.vn/account-service/db"
 	"acbs.com.vn/account-service/pkg/constants"
 	"context"
+	"fmt"
 	"github.com/heptiolabs/healthcheck"
+	"log"
 	"net/http"
 	"time"
 )
@@ -33,4 +36,31 @@ func (s *server) runHealthCheck(ctx context.Context) {
 			s.log.WarnMsg("ListenAndServe", err)
 		}
 	}()
+}
+
+func (s *server) Migrate() {
+	log.Println("migrating...")
+
+	dsn := fmt.Sprintf("%s://%s:%d/%s?sslmode=%s&user=%s&password=%s",
+		"postgres",
+		s.cfg.Postgresql.Host,
+		s.cfg.Postgresql.Port,
+		s.cfg.Postgresql.DBName,
+		s.cfg.Postgresql.SSLMode,
+		s.cfg.Postgresql.User,
+		s.cfg.Postgresql.Password)
+
+	migrator := db.Migrator(db.WithDSN(dsn))
+	// sqlDatabase := db.New(cfg)
+
+	migrator.DB = s.db.DB
+
+	if err := migrator.DB.Ping(); err != nil {
+		log.Fatalf("Migrate Ping error %v", err)
+	}
+
+	// todo: accept cli flag for other operations
+	migrator.Up()
+
+	log.Println("done migration.")
 }
