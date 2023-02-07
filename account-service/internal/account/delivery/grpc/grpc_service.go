@@ -5,7 +5,7 @@ import (
 	"acbs.com.vn/account-service/internal/account/commands"
 	"acbs.com.vn/account-service/internal/account/queries"
 	"acbs.com.vn/account-service/internal/account/service"
-	"acbs.com.vn/account-service/internal/models"
+	"acbs.com.vn/account-service/internal/mappers"
 	"acbs.com.vn/account-service/pkg/logger"
 	accountService "acbs.com.vn/account-service/proto"
 	"context"
@@ -35,13 +35,13 @@ func (s *grpcService) CreateAccount(ctx context.Context, req *accountService.Cre
 	command := commands.NewCreateAccountCommand(req.GetName())
 	if err := s.v.StructCtx(ctx, command); err != nil {
 		s.log.WarnMsg("validate", err)
-		return nil, s.errResponse(codes.InvalidArgument, err)
+		return &accountService.CreateAccountRes{}, s.errResponse(codes.InvalidArgument, err)
 	}
 
 	account, err := s.ps.Commands.CreateAccount.Handle(ctx, command)
 	if err != nil {
 		s.log.WarnMsg("CreateProduct.Handle", err)
-		return nil, s.errResponse(codes.InvalidArgument, err)
+		return &accountService.CreateAccountRes{}, s.errResponse(codes.InvalidArgument, err)
 	}
 
 	//s.metrics.SuccessGrpcRequests.Inc()
@@ -67,7 +67,7 @@ func (s *grpcService) GetAccountByName(ctx context.Context, req *accountService.
 	}
 
 	//s.metrics.SuccessGrpcRequests.Inc()
-	list := models.AccountListToAccounts(accounts)
+	list := mappers.AccountListToAccounts(accounts)
 
 	return &accountService.GetAccountByNameRes{Accounts: list}, nil
 }

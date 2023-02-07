@@ -41,7 +41,12 @@ func (s *server) Run() error {
 	s.im = interceptors.NewInterceptorManager(s.log)
 	//s.metrics = metrics.NewWriterServiceMetrics(s.cfg)
 
-	pgxConn := postgres.NewSqlx(s.cfg.Postgresql)
+	pgxConn, err := postgres.NewSqlx(s.cfg.Postgresql)
+
+	if err != nil {
+		return errors.Wrap(err, "postgresql.NewPgxConn")
+	}
+
 	s.db = pgxConn
 	//s.log.Infof("postgres co-nnected: %v", pgxConn.Stat().TotalConns())
 	defer pgxConn.Close()

@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-func NewSqlx(cfg *Config) *sqlx.DB {
+func NewSqlx(cfg *Config) (*sqlx.DB, error) {
 
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.DBName)
@@ -18,9 +18,10 @@ func NewSqlx(cfg *Config) *sqlx.DB {
 	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
 		log.Fatal(err)
+		return nil, err
 	}
 
 	database.Alive(db.DB)
 
-	return db
+	return db, nil
 }

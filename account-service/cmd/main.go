@@ -24,12 +24,14 @@ func main() {
 
 	appLogger := logger.NewAppLogger(cfg.Logger)
 	appLogger.InitLogger()
-	appLogger.WithName("ReaderService")
+	appLogger.WithName("Account-Service")
 
 	conn, err := grpc.Dial("localhost:5002", grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
+	defer conn.Close()
+
 	client := accountService.NewAccountServiceClient(conn)
 
 	// g := gin.Default()
@@ -46,8 +48,8 @@ func main() {
 				"error": err.Error(),
 			})
 		}
-
-		if res, err := client.CreateAccount(context.Background(), requestBody); err == nil {
+		res, err := client.CreateAccount(context.Background(), requestBody)
+		if err == nil {
 			return c.Status(fiber.StatusOK).JSON(fiber.Map{
 				"result": fmt.Sprint(res.Name),
 			})
