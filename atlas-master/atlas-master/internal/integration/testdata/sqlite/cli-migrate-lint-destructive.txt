@@ -1,0 +1,35 @@
+# Expect the command to fail; exit code 1.
+! atlas migrate lint --dir file://migrations --dev-url URL --latest=1 > got1.txt
+cmp got1.txt expected1.txt
+
+# Expect the command to fail; exit code 1.
+! atlas migrate lint --dir file://migrations --dev-url URL --latest=2 > got2.txt
+cmp got2.txt expected2.txt
+
+-- migrations/1.sql --
+CREATE TABLE users (id int);
+
+CREATE TABLE pets (id int);
+
+ALTER TABLE users RENAME COLUMN id TO oid;
+
+-- migrations/2.sql --
+DROP TABLE users;
+
+-- migrations/3.sql --
+DROP TABLE pets;
+
+-- expected1.txt --
+3.sql: destructive changes detected:
+
+	L1: Dropping table "pets"
+
+-- expected2.txt --
+2.sql: destructive changes detected:
+
+	L1: Dropping table "users"
+
+3.sql: destructive changes detected:
+
+	L1: Dropping table "pets"
+

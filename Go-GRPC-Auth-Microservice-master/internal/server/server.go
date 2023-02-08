@@ -1,6 +1,12 @@
 package server
 
 import (
+	sessRepository "github.com/AleksK1NG/auth-microservice/internal/session/repository"
+	sessUseCase "github.com/AleksK1NG/auth-microservice/internal/session/usecase"
+	"github.com/AleksK1NG/auth-microservice/internal/user/delivery/darp"
+	userRepository "github.com/AleksK1NG/auth-microservice/internal/user/repository"
+	userUseCase "github.com/AleksK1NG/auth-microservice/internal/user/usecase"
+	pb "github.com/dapr/go-sdk/dapr/proto/runtime/v1"
 	"net"
 	"net/http"
 	"os"
@@ -20,14 +26,8 @@ import (
 
 	"github.com/AleksK1NG/auth-microservice/config"
 	"github.com/AleksK1NG/auth-microservice/internal/interceptors"
-	sessRepository "github.com/AleksK1NG/auth-microservice/internal/session/repository"
-	sessUseCase "github.com/AleksK1NG/auth-microservice/internal/session/usecase"
-	authServerGRPC "github.com/AleksK1NG/auth-microservice/internal/user/delivery/grpc/service"
-	userRepository "github.com/AleksK1NG/auth-microservice/internal/user/repository"
-	userUseCase "github.com/AleksK1NG/auth-microservice/internal/user/usecase"
 	"github.com/AleksK1NG/auth-microservice/pkg/logger"
 	"github.com/AleksK1NG/auth-microservice/pkg/metric"
-	userService "github.com/AleksK1NG/auth-microservice/proto"
 )
 
 // GRPC Auth Server
@@ -68,7 +68,7 @@ func (s *Server) Run() error {
 	}
 	defer l.Close()
 
-	server := grpc.NewServer(grpc.KeepaliveParams(keepalive.ServerParameters{
+	serverGrpc := grpc.NewServer(grpc.KeepaliveParams(keepalive.ServerParameters{
 		MaxConnectionIdle: s.cfg.Server.MaxConnectionIdle * time.Minute,
 		Timeout:           s.cfg.Server.Timeout * time.Second,
 		MaxConnectionAge:  s.cfg.Server.MaxConnectionAge * time.Minute,
@@ -83,18 +83,20 @@ func (s *Server) Run() error {
 	)
 
 	if s.cfg.Server.Mode != "Production" {
-		reflection.Register(server)
+		reflection.Register(serverGrpc)
 	}
 
-	authGRPCServer := authServerGRPC.NewAuthServerGRPC(s.logger, s.cfg, userUC, sessUC)
-	userService.RegisterUserServiceServer(server, authGRPCServer)
+	//authGRPCServer := authServerGRPC.NewAuthServerGRPC(s.logger, s.cfg, userUC, sessUC)
+	//userService.RegisterUserServiceServer(serverGrpc, authGRPCServer)
 
-	grpc_prometheus.Register(server)
+	pb.RegisterAppCallbackServer(serverGrpc, darp.NewDarpGprc(s.logger, s.cfg, userUC, sessUC))
+
+	grpc_prometheus.Register(serverGrpc)
 	http.Handle("/metrics", promhttp.Handler())
 
 	go func() {
 		s.logger.Infof("Server is listening on port: %v", s.cfg.Server.Port)
-		if err := server.Serve(l); err != nil {
+		if err := serverGrpc.Serve(l); err != nil {
 			s.logger.Fatal(err)
 		}
 	}()
@@ -103,7 +105,7 @@ func (s *Server) Run() error {
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 
 	<-quit
-	server.GracefulStop()
+	serverGrpc.GracefulStop()
 	s.logger.Info("Server Exited Properly")
 
 	return nil
