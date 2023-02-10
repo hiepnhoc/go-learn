@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"os"
 
@@ -18,6 +19,15 @@ import (
 )
 
 func main() {
+
+	log.Println(string(json.RawMessage([]byte(`{
+        "role": "admin",
+        "email": "hiepln5@gmail.com",
+        "first_name":"asd",
+        "last_name":"asdasd",
+        "password":"123"
+    }`))))
+
 	log.Println("Starting auth microservice")
 
 	configPath := utils.GetConfigPath(os.Getenv("config"))

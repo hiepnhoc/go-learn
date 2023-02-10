@@ -1,0 +1,69 @@
+ServiceName: ACCOUNT-SERVICE
+Server:
+  AppVersion: 1.0.0
+  Port: :5000
+  PprofPort: :5555
+  Mode: Development
+  JwtSecretKey: secretkey
+  CookieName: jwt-token
+  ReadTimeout: 5
+  WriteTimeout: 5
+  SSL: false
+  CtxDefaultTimeout: 12
+  CSRF: true
+  Debug: false
+  MaxConnectionIdle: 5
+  Timeout: 15
+  MaxConnectionAge: 5
+  Time: 120
+
+Logger:
+  Development: true
+  DisableCaller: false
+  DisableStacktrace: false
+  Encoding: json
+  Level: info
+
+Postgres:
+  PostgresqlHost: localhost
+  PostgresqlPort: 5432
+  PostgresqlUser: postgres
+  PostgresqlPassword: postgres
+  PostgresqlDbname: auth_db
+  PostgresqlSSLMode: false
+  PgDriver: pgx
+
+DaprComponents:
+  StateStore:
+    ComponentName: account-service
+
+Redis:
+  RedisAddr: localhost:6379
+  RedisPassword:
+  RedisDb: 0
+  RedisDefaultdb: 0
+  MinIdleConns: 200
+  PoolSize: 12000
+  PoolTimeout: 240
+  Password: ""
+  DB: 0
+
+Cookie:
+  Name: jwt-token
+  MaxAge: 86400
+  Secure: false
+  HttpOnly: true
+
+Session:
+  Name: session-id
+  Prefix: api-session
+  Expire: 3600
+
+Metrics:
+  Url: 0.0.0.0:7070
+  ServiceName: auth_microservice
+
+Jaeger:
+  Host: localhost:6831
+  ServiceName: Auth_GRPC
+  LogSpans: false

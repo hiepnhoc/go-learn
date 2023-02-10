@@ -1,0 +1,21 @@
+version: v1
+name: buf.build/2margin.vn/account-service
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/grpc-ecosystem/grpc-gateway
+lint:
+  use:
+    - DEFAULT
+  ignore_only:
+    PACKAGE_DIRECTORY_MATCH:
+      - bank.proto
+      - transaction.proto
+    PACKAGE_VERSION_SUFFIX:
+      - bank.proto
+      - transaction.proto
+    RPC_REQUEST_RESPONSE_UNIQUE:
+      - bank.proto
+      - transaction.proto
+    RPC_RESPONSE_STANDARD_NAME:
+      - bank.proto
+      - transaction.proto

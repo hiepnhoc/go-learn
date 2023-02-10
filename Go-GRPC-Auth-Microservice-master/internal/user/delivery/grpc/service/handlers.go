@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"github.com/opentracing/opentracing-go"

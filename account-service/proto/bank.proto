@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "./;v1";
+
+package v1;
+
+
+message BankRequest {
+  string bank_code = 1 ;
+  string bank_name = 2;
+  string bank_branch = 3;
+  string customer_name = 4;
+  string owner = 5;
+}
+
+message BankResponse {
+
+}

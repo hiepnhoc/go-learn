@@ -1,0 +1,1 @@
+protoc --experimental_allow_proto3_optional --proto_path=api/proto/v1 --proto_path=third_party --go_out pkg/api/v1  --go-grpc_out=pkg/api/v1 --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative account.service.proto

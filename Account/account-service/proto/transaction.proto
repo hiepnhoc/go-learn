@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "./;v1";
+
+package v1;
+
+message TransactionRequest {
+
+  enum Type{
+    TYPE_UNSPECIFIED = 0;
+    TYPE_WITHDRAW = 1;
+    TYPE_DEPOSIT = 2;
+  }
+  string bank_code = 1 ;
+  string bank_name = 2;
+  string bank_branch = 3;
+  string customer_name = 4;
+  Type type = 5;
+  float amount = 6;
+  string note = 7;
+}

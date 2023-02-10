@@ -3,18 +3,24 @@ package darp
 import (
 	"context"
 	"fmt"
+	"github.com/AleksK1NG/auth-microservice/config"
 	"github.com/AleksK1NG/auth-microservice/internal/session"
 	"github.com/AleksK1NG/auth-microservice/internal/user"
-	userService "github.com/AleksK1NG/auth-microservice/proto"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes/any"
-	"github.com/golang/protobuf/ptypes/empty"
-
-	"github.com/AleksK1NG/auth-microservice/config"
 	authServerGRPC "github.com/AleksK1NG/auth-microservice/internal/user/delivery/grpc/service"
+	"github.com/AleksK1NG/auth-microservice/pkg/convert"
 	"github.com/AleksK1NG/auth-microservice/pkg/logger"
+	userService "github.com/AleksK1NG/auth-microservice/proto"
 	commonv1pb "github.com/dapr/go-sdk/dapr/proto/common/v1"
 	pb "github.com/dapr/go-sdk/dapr/proto/runtime/v1"
+	"github.com/golang/protobuf/ptypes/any"
+	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/proto"
+	"strings"
+)
+
+const (
+	ContentType     = "application/json"
+	ContentTypeUTF8 = "application/json; utf-8"
 )
 
 // server is our user app
@@ -36,34 +42,63 @@ func (s *darpGprc) EchoMethod() string {
 }
 
 // EchoMethod is a simple demo method to invoke
-func (s *darpGprc) Register(ctx context.Context, r *userService.RegisterRequest) (*userService.RegisterResponse, error) {
+func (s *darpGprc) Register(ctx context.Context, in *commonv1pb.InvokeRequest) ([]byte, error) {
 	service := authServerGRPC.NewAuthServerGRPC(s.logger, s.cfg, s.userUC, s.sessUC)
-	return service.Register(ctx, r)
+	registerRequest := userService.RegisterRequest{}
+
+	//registerRequest := userService.RegisterRequest{
+	//	Role:      "admin",
+	//	Password:  "123456",
+	//	FirstName: "hiepln",
+	//	LastName:  "hiepln1",
+	//	Email:     "hiepln8@acbs.com.vn",
+	//}
+	//
+	//registerRequestBytes, err := convert.ProtoBytes(&registerRequest)
+	//
+	//input := commonv1pb.InvokeRequest{
+	//	Data: &any.Any{
+	//		Value: registerRequestBytes,
+	//	},
+	//}
+
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	err := s.convertToMessage(in, &registerRequest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := service.Register(ctx, &registerRequest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return convert.ProtoBytes(res)
 }
 
 // This method gets invoked when a remote service has called the app through Dapr
 // The payload carries a Method to identify the method, a set of metadata properties and an optional payload
 func (s *darpGprc) OnInvoke(ctx context.Context, in *commonv1pb.InvokeRequest) (*commonv1pb.InvokeResponse, error) {
-	var response *proto.Message
+	var response []byte
 	var err error
 
 	switch in.Method {
 
 	case "Register":
-		response, err := s.Register(ctx, &userService.RegisterRequest{
-			Role:      "admin",
-			Email:     "hiepln123@acbs.com",
-			Password:  "123",
-			FirstName: "hiep1",
-			LastName:  "hiepln2"})
+		response, err = s.Register(ctx, in)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	return &commonv1pb.InvokeResponse{
-		ContentType: "text/plain; charset=UTF-8",
-		Data:        &any.Any{Value: []byte(response)},
+		ContentType: in.ContentType,
+		Data:        &any.Any{Value: response, TypeUrl: in.Data.TypeUrl},
 	}, nil
 }
 
@@ -95,4 +130,13 @@ func (s *darpGprc) OnBindingEvent(ctx context.Context, in *pb.BindingEventReques
 func (s *darpGprc) OnTopicEvent(ctx context.Context, in *pb.TopicEventRequest) (*pb.TopicEventResponse, error) {
 	fmt.Println("Topic message arrived")
 	return &pb.TopicEventResponse{}, nil
+}
+
+func (s *darpGprc) convertToMessage(input *commonv1pb.InvokeRequest, out proto.Message) error {
+
+	if strings.HasPrefix(input.ContentType, ContentType) {
+		return convert.ProtoJsonToMessage(input.Data.Value, out)
+	}
+	return convert.ProtoMessage(input.Data.Value, out)
+
 }
