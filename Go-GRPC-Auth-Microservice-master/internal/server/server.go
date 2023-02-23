@@ -4,11 +4,13 @@ import (
 	sessRepository "github.com/AleksK1NG/auth-microservice/internal/session/repository"
 	sessUseCase "github.com/AleksK1NG/auth-microservice/internal/session/usecase"
 	"github.com/AleksK1NG/auth-microservice/internal/user/delivery/darp"
+	authServerGRPC "github.com/AleksK1NG/auth-microservice/internal/user/delivery/grpc/service"
 	userRepository "github.com/AleksK1NG/auth-microservice/internal/user/repository"
 	userUseCase "github.com/AleksK1NG/auth-microservice/internal/user/usecase"
+	userService "github.com/AleksK1NG/auth-microservice/proto"
 	pb "github.com/dapr/go-sdk/dapr/proto/runtime/v1"
+	"github.com/dapr/go-sdk/service/common"
 	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,7 +21,6 @@ import (
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/jmoiron/sqlx"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
@@ -28,6 +29,10 @@ import (
 	"github.com/AleksK1NG/auth-microservice/internal/interceptors"
 	"github.com/AleksK1NG/auth-microservice/pkg/logger"
 	"github.com/AleksK1NG/auth-microservice/pkg/metric"
+)
+
+var (
+	service common.Service
 )
 
 // GRPC Auth Server
@@ -86,13 +91,22 @@ func (s *Server) Run() error {
 		reflection.Register(serverGrpc)
 	}
 
-	//authGRPCServer := authServerGRPC.NewAuthServerGRPC(s.logger, s.cfg, userUC, sessUC)
-	//userService.RegisterUserServiceServer(serverGrpc, authGRPCServer)
+	authGRPCServer := authServerGRPC.NewAuthServerGRPC(s.logger, s.cfg, userUC, sessUC)
+	userService.RegisterUserServiceServer(serverGrpc, authGRPCServer)
 
-	pb.RegisterAppCallbackServer(serverGrpc, darp.NewDarpGprc(s.logger, s.cfg, userUC, sessUC))
+	pb.RegisterAppCallbackServer(serverGrpc, darp.NewDarpGprc(s.logger, s.cfg, authGRPCServer))
 
 	grpc_prometheus.Register(serverGrpc)
-	http.Handle("/metrics", promhttp.Handler())
+	//http.Handle("/metrics", promhttp.Handler())
+
+	//if service, err = daprd.NewService(":9000"); err != nil {
+	//	//log.Infof("failed to start the server: %v", err)
+	//	return err
+	//}
+
+	//darphttp := darp.NewDarpHttp(s.logger, s.cfg, authGRPCServer)
+	//
+	//darphttp.AddInvocationHandler(s.logger, service, "/register")
 
 	go func() {
 		s.logger.Infof("Server is listening on port: %v", s.cfg.Server.Port)
@@ -100,6 +114,10 @@ func (s *Server) Run() error {
 			s.logger.Fatal(err)
 		}
 	}()
+
+	//if err := service.Start(); err != nil && err != http.ErrServerClosed {
+	//	s.logger.Fatal("error: %v", err)
+	//}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)

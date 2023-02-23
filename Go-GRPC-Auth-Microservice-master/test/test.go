@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/AleksK1NG/auth-microservice/pkg/convert"
 	userService "github.com/AleksK1NG/auth-microservice/proto"
+	dapr "github.com/dapr/go-sdk/client"
 	commonv1pb "github.com/dapr/go-sdk/dapr/proto/common/v1"
 	pb "github.com/dapr/go-sdk/dapr/proto/runtime/v1"
 	"github.com/golang/protobuf/ptypes/any"
@@ -15,7 +17,8 @@ import (
 )
 
 func main() {
-	HandlerInvoke()
+	//HandlerInvoke()
+	invoke()
 }
 
 const (
@@ -37,12 +40,14 @@ func HandlerInvoke() {
 
 	ctx = metadata.AppendToOutgoingContext(ctx, "account-service", "server")
 
+	email := fmt.Sprintf("hiepln%d@acbs.com.vn", rand.Intn(200))
+
 	registerRequest := &userService.RegisterRequest{
 		Role:      "admin",
 		Password:  "123456",
 		FirstName: "hiepln",
 		LastName:  "hiepln1",
-		Email:     "hiepln" + string(rand.Intn(1000)) + "@acbs.com.vn",
+		Email:     email,
 	}
 
 	registerRequestBytes, err := convert.ProtoToJsonBytes(registerRequest)
@@ -71,4 +76,18 @@ func HandlerInvoke() {
 	}
 
 	log.Printf("Greeting: %s", registerResponse.String())
+}
+
+func invoke() {
+	client, err := dapr.NewClient()
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+	ctx := context.Background()
+	//Using Dapr SDK to invoke a method
+	result, err := client.InvokeMethod(ctx, "account-service", "register", "post")
+	//log.Println("Order requested: " + strconv.Itoa(orderId))
+	log.Println("Result: ")
+	log.Println(result)
 }

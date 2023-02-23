@@ -18,7 +18,7 @@ import (
 )
 
 // Register new user
-func (u *usersService) Register(ctx context.Context, r *userService.RegisterRequest) (*userService.RegisterResponse, error) {
+func (u *UsersService) Register(ctx context.Context, r *userService.RegisterRequest) (*userService.RegisterResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "user.Create")
 	defer span.Finish()
 
@@ -43,7 +43,7 @@ func (u *usersService) Register(ctx context.Context, r *userService.RegisterRequ
 }
 
 // Login user with email and password
-func (u *usersService) Login(ctx context.Context, r *userService.LoginRequest) (*userService.LoginResponse, error) {
+func (u *UsersService) Login(ctx context.Context, r *userService.LoginRequest) (*userService.LoginResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "user.Create")
 	defer span.Finish()
 
@@ -71,7 +71,7 @@ func (u *usersService) Login(ctx context.Context, r *userService.LoginRequest) (
 }
 
 // Find user by email address
-func (u *usersService) FindByEmail(ctx context.Context, r *userService.FindByEmailRequest) (*userService.FindByEmailResponse, error) {
+func (u *UsersService) FindByEmail(ctx context.Context, r *userService.FindByEmailRequest) (*userService.FindByEmailResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "user.Create")
 	defer span.Finish()
 
@@ -91,7 +91,7 @@ func (u *usersService) FindByEmail(ctx context.Context, r *userService.FindByEma
 }
 
 // Find user by uuid
-func (u *usersService) FindByID(ctx context.Context, r *userService.FindByIDRequest) (*userService.FindByIDResponse, error) {
+func (u *UsersService) FindByID(ctx context.Context, r *userService.FindByIDRequest) (*userService.FindByIDResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "user.Create")
 	defer span.Finish()
 
@@ -111,7 +111,7 @@ func (u *usersService) FindByID(ctx context.Context, r *userService.FindByIDRequ
 }
 
 // Get session id from, ctx metadata, find user by uuid and returns it
-func (u *usersService) GetMe(ctx context.Context, r *userService.GetMeRequest) (*userService.GetMeResponse, error) {
+func (u *UsersService) GetMe(ctx context.Context, r *userService.GetMeRequest) (*userService.GetMeResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "user.Create")
 	defer span.Finish()
 
@@ -140,7 +140,7 @@ func (u *usersService) GetMe(ctx context.Context, r *userService.GetMeRequest) (
 }
 
 // Logout user, delete current session
-func (u *usersService) Logout(ctx context.Context, request *userService.LogoutRequest) (*userService.LogoutResponse, error) {
+func (u *UsersService) Logout(ctx context.Context, request *userService.LogoutRequest) (*userService.LogoutResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "user.Create")
 	defer span.Finish()
 
@@ -158,7 +158,7 @@ func (u *usersService) Logout(ctx context.Context, request *userService.LogoutRe
 	return &userService.LogoutResponse{}, nil
 }
 
-func (u *usersService) registerReqToUserModel(r *userService.RegisterRequest) (*models.User, error) {
+func (u *UsersService) registerReqToUserModel(r *userService.RegisterRequest) (*models.User, error) {
 	avatar := r.GetAvatar()
 	candidate := &models.User{
 		Email:     r.GetEmail(),
@@ -176,7 +176,7 @@ func (u *usersService) registerReqToUserModel(r *userService.RegisterRequest) (*
 	return candidate, nil
 }
 
-func (u *usersService) userModelToProto(user *models.User) *userService.User {
+func (u *UsersService) userModelToProto(user *models.User) *userService.User {
 	userProto := &userService.User{
 		Uuid:      user.UserID.String(),
 		FirstName: user.FirstName,
@@ -191,7 +191,7 @@ func (u *usersService) userModelToProto(user *models.User) *userService.User {
 	return userProto
 }
 
-func (u *usersService) getSessionIDFromCtx(ctx context.Context) (string, error) {
+func (u *UsersService) getSessionIDFromCtx(ctx context.Context) (string, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return "", status.Errorf(codes.Unauthenticated, "metadata.FromIncomingContext: %v", grpc_errors.ErrNoCtxMetaData)

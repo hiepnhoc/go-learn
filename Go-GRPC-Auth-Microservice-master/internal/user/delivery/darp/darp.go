@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/AleksK1NG/auth-microservice/config"
-	"github.com/AleksK1NG/auth-microservice/internal/session"
-	"github.com/AleksK1NG/auth-microservice/internal/user"
 	authServerGRPC "github.com/AleksK1NG/auth-microservice/internal/user/delivery/grpc/service"
 	"github.com/AleksK1NG/auth-microservice/pkg/convert"
 	"github.com/AleksK1NG/auth-microservice/pkg/logger"
@@ -26,14 +24,13 @@ const (
 // server is our user app
 type darpGprc struct {
 	pb.UnimplementedAppCallbackServer
-	logger logger.Logger
-	cfg    *config.Config
-	userUC user.UserUseCase
-	sessUC session.SessionUseCase
+	logger   logger.Logger
+	cfg      *config.Config
+	userGrpc *authServerGRPC.UsersService
 }
 
-func NewDarpGprc(logger logger.Logger, cfg *config.Config, userUC user.UserUseCase, sessUC session.SessionUseCase) *darpGprc {
-	return &darpGprc{logger: logger, cfg: cfg, userUC: userUC, sessUC: sessUC}
+func NewDarpGprc(logger logger.Logger, cfg *config.Config, userService *authServerGRPC.UsersService) *darpGprc {
+	return &darpGprc{logger: logger, cfg: cfg, userGrpc: userService}
 }
 
 // EchoMethod is a simple demo method to invoke
@@ -43,7 +40,6 @@ func (s *darpGprc) EchoMethod() string {
 
 // EchoMethod is a simple demo method to invoke
 func (s *darpGprc) Register(ctx context.Context, in *commonv1pb.InvokeRequest) ([]byte, error) {
-	service := authServerGRPC.NewAuthServerGRPC(s.logger, s.cfg, s.userUC, s.sessUC)
 	registerRequest := userService.RegisterRequest{}
 
 	//registerRequest := userService.RegisterRequest{
@@ -72,7 +68,7 @@ func (s *darpGprc) Register(ctx context.Context, in *commonv1pb.InvokeRequest) (
 		return nil, err
 	}
 
-	res, err := service.Register(ctx, &registerRequest)
+	res, err := s.userGrpc.Register(ctx, &registerRequest)
 
 	if err != nil {
 		return nil, err

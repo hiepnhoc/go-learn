@@ -7,7 +7,7 @@ import (
 	"github.com/AleksK1NG/auth-microservice/pkg/logger"
 )
 
-type usersService struct {
+type UsersService struct {
 	logger logger.Logger
 	cfg    *config.Config
 	userUC user.UserUseCase
@@ -15,6 +15,6 @@ type usersService struct {
 }
 
 // Auth service constructor
-func NewAuthServerGRPC(logger logger.Logger, cfg *config.Config, userUC user.UserUseCase, sessUC session.SessionUseCase) *usersService {
-	return &usersService{logger: logger, cfg: cfg, userUC: userUC, sessUC: sessUC}
+func NewAuthServerGRPC(logger logger.Logger, cfg *config.Config, userUC user.UserUseCase, sessUC session.SessionUseCase) *UsersService {
+	return &UsersService{logger: logger, cfg: cfg, userUC: userUC, sessUC: sessUC}
 }
