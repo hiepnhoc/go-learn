@@ -11,6 +11,7 @@ import (
 	pb "github.com/dapr/go-sdk/dapr/proto/runtime/v1"
 	"github.com/dapr/go-sdk/service/common"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -29,6 +30,7 @@ import (
 	"github.com/AleksK1NG/auth-microservice/internal/interceptors"
 	"github.com/AleksK1NG/auth-microservice/pkg/logger"
 	"github.com/AleksK1NG/auth-microservice/pkg/metric"
+	daprd "github.com/dapr/go-sdk/service/grpc"
 )
 
 var (
@@ -99,14 +101,14 @@ func (s *Server) Run() error {
 	grpc_prometheus.Register(serverGrpc)
 	//http.Handle("/metrics", promhttp.Handler())
 
-	//if service, err = daprd.NewService(":9000"); err != nil {
-	//	//log.Infof("failed to start the server: %v", err)
-	//	return err
-	//}
+	if service, err = daprd.NewService(":9000"); err != nil {
+		//log.Infof("failed to start the server: %v", err)
+		return err
+	}
 
-	//darphttp := darp.NewDarpHttp(s.logger, s.cfg, authGRPCServer)
-	//
-	//darphttp.AddInvocationHandler(s.logger, service, "/register")
+	darphttp := darp.NewDarpHttp(s.logger, s.cfg, authGRPCServer)
+	////
+	darphttp.AddInvocationHandler(s.logger, service, "/register")
 
 	go func() {
 		s.logger.Infof("Server is listening on port: %v", s.cfg.Server.Port)
@@ -115,9 +117,9 @@ func (s *Server) Run() error {
 		}
 	}()
 
-	//if err := service.Start(); err != nil && err != http.ErrServerClosed {
-	//	s.logger.Fatal("error: %v", err)
-	//}
+	if err := service.Start(); err != nil && err != http.ErrServerClosed {
+		s.logger.Fatal("error: %v", err)
+	}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)

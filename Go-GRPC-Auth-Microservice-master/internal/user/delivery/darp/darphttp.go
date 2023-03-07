@@ -61,7 +61,7 @@ func (s *darpHttp) echoHandler(ctx context.Context, in *common.InvocationEvent) 
 
 	res, err := s.userGrpc.Register(ctx, &registerRequest)
 
-	fmt.Println(res)
+	fmt.Println("test", res)
 	//resByte, err := convert.ProtoBytes(res)
 
 	out = &common.Content{

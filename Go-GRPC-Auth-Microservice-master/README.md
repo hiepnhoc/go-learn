@@ -43,3 +43,12 @@ http://localhost:9090
 ### Grafana UI:
 
 http://localhost:3000
+
+dapr run --app-id account-service --app-protocol http --app-port 8080 --dapr-http-port 3501 --log-level debug go run ./cmd/auth/main.go
+
+dapr run  --app-id account-service  --app-protocol grpc --dapr-http-port 3500 --dapr-grpc-port 50001  --app-port 5000 --enable-api-logging go run ./cmd/auth/main.go
+
+dapr run --app-id account-service --app-protocol http --app-port 8080 --dapr-http-port 3501 --dapr-grpc-port 50001 --log-level debug go run ./cmd/auth/main.go
+
+ 
+dapr run  --app-id account-service  --app-protocol grpc --dapr-http-port 3500 --dapr-grpc-port 50001  --app-port 9000 --enable-api-logging go run ./cmd/auth/main.go
